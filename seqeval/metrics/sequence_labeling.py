@@ -325,14 +325,14 @@ def classification_report(y_true, y_pred, digits=2, suffix=False):
     last_line_heading = 'macro avg'
     width = max(name_width, len(last_line_heading), digits)
 
-    headers = ["precision", "recall", "f1-score", "support"]
+    headers = ["precision", "recall", "f1-score", "support", "tagged"]
     head_fmt = u'{:>{width}s} ' + u' {:>9}' * len(headers)
     report = head_fmt.format(u'', *headers, width=width)
     report += u'\n\n'
 
-    row_fmt = u'{:>{width}s} ' + u' {:>9.{digits}f}' * 3 + u' {:>9}\n'
+    row_fmt = u'{:>{width}s} ' + u' {:>9.{digits}f}' * 3 + u' {:>9} {:>9}\n'
 
-    ps, rs, f1s, s = [], [], [], []
+    ps, rs, f1s, s, t = [], [], [], [], []
     for type_name, true_entities in d1.items():
         pred_entities = d2[type_name]
         nb_correct = len(true_entities & pred_entities)
@@ -343,12 +343,13 @@ def classification_report(y_true, y_pred, digits=2, suffix=False):
         r = nb_correct / nb_true if nb_true > 0 else 0
         f1 = 2 * p * r / (p + r) if p + r > 0 else 0
 
-        report += row_fmt.format(*[type_name, p, r, f1, nb_true], width=width, digits=digits)
+        report += row_fmt.format(*[type_name, p, r, f1, nb_true, nb_pred], width=width, digits=digits)
 
         ps.append(p)
         rs.append(r)
         f1s.append(f1)
         s.append(nb_true)
+        t.append(nb_pred)
 
     report += u'\n'
 
@@ -357,13 +358,13 @@ def classification_report(y_true, y_pred, digits=2, suffix=False):
                              precision_score(y_true, y_pred, suffix=suffix),
                              recall_score(y_true, y_pred, suffix=suffix),
                              f1_score(y_true, y_pred, suffix=suffix),
-                             np.sum(s),
+                             np.sum(s), np.sum(t),
                              width=width, digits=digits)
     report += row_fmt.format(last_line_heading,
                              np.average(ps, weights=s),
                              np.average(rs, weights=s),
                              np.average(f1s, weights=s),
-                             np.sum(s),
+                             np.sum(s), np.sum(t),
                              width=width, digits=digits)
 
     return report
